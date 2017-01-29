@@ -3,20 +3,19 @@ Mirror of k9copy-reloaded patched to enable compilation with latest qt, ffmpeg a
 
 TO BUILD
 
-mkdir build
-cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DQT5_BUILD=ON
-make
-sudo make install
+mkdir build  
+cd build  
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DQT5_BUILD=ON  
+make  
+sudo make install  
 
 OLD README BELOW (preserved for archival purposes)
 
-K9Copy is now available in two versions, built from the same source.
-1. Qt4 + KDE4
-2. Qt5 + KF5
-To choose between these two pass into CMake the -DQT5_BUILD=ON/OFF option. 
-Passing in ON will build the KF5 Version, whereas OFF will build the KDE4 version.
-
+K9Copy is now available in two versions, built from the same source.  
+1. Qt4 + KDE4  
+2. Qt5 + KF5  
+To choose between these two pass into CMake the -DQT5_BUILD=ON/OFF option.   
+Passing in ON will build the KF5 Version, whereas OFF will build the KDE4 version.  
 
 
 !!!!!ATTENTION!!!!!
