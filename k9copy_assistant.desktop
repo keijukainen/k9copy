@@ -1,9 +1,7 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
-Encoding=UTF-8
 Type=Application
-Name=k9copy assistant
-Exec=k9copy --assistant -caption "%c" %i %m  %u
+Name=K9copy Assistant
+Exec=k9copy --assistant
 Comment=DVD9 to DVD5 backup tool
 Comment[fr]=Backup de DVD9 en DVD5
 Comment[tr]=DVD9 DVD5 yedekleme aracı
@@ -14,9 +12,8 @@ GenericName[fr]=Backup de DVD Video
 GenericName[tr]=DVD Vidyo Yedekleme Aracı
 GenericName[ru]=Копирование с видео-DVD
 GenericName[uk]=Копіювання відео-DVD
-MimeTypes=
 Terminal=false
 Icon=k9copy
 X-DocPath=k9copy/index.html
-Categories=Qt;KDE;AudioVideo;DiscBurning;
+Categories=Qt;KDE;AudioVideo;DiscBurning;AudioVideoEditing;
 X-KDE-StartupNotify=true

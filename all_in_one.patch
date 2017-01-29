@@ -1,0 +1,436 @@
+@@@ This patch combines 8 total patches needed to compile k9copy with the latest qt, ffmpeg and gcc
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 64e08e4..2d144e7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,9 +1,10 @@
++cmake_minimum_required(VERSION 3.1)
+ project(k9copy)
+ set (VERSION 3.0.3)
+ 
+ # where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked
+ 
+-option(QT5_BUILD "Build with Qt5/KF5" OFF) 
++option(QT5_BUILD "Build with Qt5/KF5" ON)
+ #Options ON or OFF OFF=QT4
+ 
+ if(QT5_BUILD)			#With above Setting this corresponds to my check of:     #if QT_VERSION >= 0x050000 
+@@ -58,11 +59,11 @@ INCLUDE(CMakeDetermineSystem)
+ INCLUDE(CheckIncludeFiles)
+ INCLUDE(FindLibMpeg2)
+ INCLUDE(FindXine)
+-#INCLUDE(FindAvcodec)
++INCLUDE(FindAvcodec)
+ INCLUDE(FindAvformat)
+ #INCLUDE(FindAvutil)
+ INCLUDE(FindFFmpegScale)
+-#INCLUDE(FindLibDvdread)
++INCLUDE(FindLibDvdread)
+ 
+ # usage: CHECK_INCLUDE_FILES (<header> <RESULT_VARIABLE> )
+ CHECK_INCLUDE_FILES(inttypes.h      HAVE_INTTYPES_H)                    # inttypes.h
+@@ -102,17 +103,17 @@ ELSE (LIBDL_LIBRARY)
+   FIND_LIBRARY(LIBDL_LIBRARY NAMES "c" PATHS )
+   MESSAGE(STATUS "Found library libc: ${LIBDL_LIBRARY}")
+ ENDIF (LIBDL_LIBRARY)
+-#FINDLIBDVDREAD("dvdread/ifo_types.h" "dvdread")
++FINDLIBDVDREAD("dvdread/ifo_types.h" "dvdread")
+ 
+ 
+-#FINDAVFORMAT("avformat")
+-#FINDAVCODEC("avcodec")
++FINDAVFORMAT("avformat")
++FINDAVCODEC("avcodec")
+ #FINDAVUTIL("avutil")
+ 
+ add_definitions( -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS)
+-add_subdirectory( src/libdvdnav-NOW) #from dvdnav
+-add_subdirectory( src/libdvdnav-NOW/dvdnav)
+-add_subdirectory( src/libdvdnav-NOW/vm)
++#add_subdirectory( src/libdvdnav-NOW) #from dvdnav
++#add_subdirectory( src/libdvdnav-NOW/dvdnav)
++#add_subdirectory( src/libdvdnav-NOW/vm)
+ add_subdirectory( src/core )
+ add_subdirectory( src/mpeg2)
+ add_subdirectory(src/vamps)
+@@ -127,7 +128,7 @@ add_subdirectory(po)
+ add_subdirectory(doc)
+ 
+ include_directories(
+- ${CMAKE_CURRENT_SOURCE_DIR}/src/libdvdnav-NOW #from dvdnav
++ #${CMAKE_CURRENT_SOURCE_DIR}/src/libdvdnav-NOW #from dvdnav
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/devices
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vamps
+@@ -139,10 +140,10 @@ include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/import
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/player
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/subtitles
+- ${CMAKE_CURRENT_SOURCE_DIR}/src/libdvdread-NOW #from dvdread
++# ${CMAKE_CURRENT_SOURCE_DIR}/src/libdvdread-NOW #from dvdread
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/batch
+ ${KDE4_INCLUDES} ${QT_INCLUDES}
+-#${LIBDVDREAD_INCLUDE_DIR}/dvdread
++${LIBDVDREAD_INCLUDE_DIR}/dvdread
+  ${AVCODEC_INCLUDE_DIR}
+  ${AVFORMAT_INCLUDE_DIR}
+  ${AVUTIL_INCLUDE_DIR}
+@@ -490,9 +491,9 @@ set (k9xineplayer_SRCS
+ )
+ 
+ 
+-add_library(dvdread STATIC ${dvdread_SRCS})
+-add_library(dvdnav STATIC ${libdvdnav_SRCS})
+-target_link_libraries(dvdnav dvdread) 
++#add_library(dvdread STATIC ${dvdread_SRCS})
++#add_library(dvdnav STATIC ${libdvdnav_SRCS})
++#target_link_libraries(dvdnav dvdread)
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
+ if(QT5_BUILD)
+ message("Qt5 Version")
+@@ -568,7 +569,7 @@ install(TARGETS k9xineplayer DESTINATION ${BIN_INSTALL_DIR} )
+ 
+ install( FILES k9copy.desktop k9copy_assistant.desktop DESTINATION  ${XDG_APPS_INSTALL_DIR} )
+ #install( FILES k9copy.kcfg  DESTINATION  ${KCFG_INSTALL_DIR} )
+-install( FILES k9copyui.rc  DESTINATION  ${DATA_INSTALL_DIR}/k9copy )
++install( FILES k9copyui.rc  DESTINATION  ${KXMLGUI_INSTALL_DIR}/k9copy )
+ 
+ install(FILES k9copy_open.desktop DESTINATION ${DATA_INSTALL_DIR}/solid/actions)
+ install(FILES k9copy_assistant_open.desktop DESTINATION ${DATA_INSTALL_DIR}/solid/actions)
+diff --git a/README.md b/README.md
+index 47b4962..45bc429 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,16 @@
+ # k9copy
+ Mirror of k9copy-reloaded patched to enable compilation with latest qt, ffmpeg and gcc
+ 
++TO BUILD
++
++mkdir build
++cd build
++cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DQT5_BUILD=ON
++make
++sudo make install
++
++OLD README BELOW (preserved for archival purposes)
++
+ K9Copy is now available in two versions, built from the same source.
+ 1. Qt4 + KDE4
+ 2. Qt5 + KF5
+diff --git a/cmake/FindAvformat.cmake b/cmake/FindAvformat.cmake
+index 8fe5b2b..88a4a40 100644
+--- a/cmake/FindAvformat.cmake
++++ b/cmake/FindAvformat.cmake
+@@ -1,33 +1,35 @@
+-# - Try to find LibAvformat
+-# Once done this will define
+-#  LIBAVFORMAT_FOUND - System has LibAvformat
+-#  LIBAVFORMAT_INCLUDE_DIRS - The LibAvformat include directories
+-#  LIBAVFORMAT_LIBRARIES - The libraries needed to use LibAvformat
+-#  LIBAVFORMAT_DEFINITIONS - Compiler switches required for using LibAvformat
+-
+-#find_package(PkgConfig)
+-#pkg_check_modules(PC_LIBAVFORMAT QUIET libAvFormat)
+-#set(LIBAVFORMAT_DEFINITIONS ${PC_LIBAVFORMAT_CFLAGS_OTHER})
+-
+-#find_path(LIBAVFORMAT_INCLUDE_DIR ffmpeg/libAvformat/avformat.h
+-#          HINTS ${PC_LIBAVFORMAT_INCLUDEDIR} ${PC_LIBAVFORMAT_INCLUDE_DIRS}
+-#          PATH_SUFFIXES ffmpeg )
+-
+-#find_library(LIBAVFORMAT_LIBRARY NAMES libavformat libAvFormat LibAvformat
+-#             HINTS ${PC_LIBAVFORMAT_LIBDIR} ${PC_LIBAVFORMAT_LIBRARY_DIRS} )
+-
+-#set(LIBAVFORMAT_LIBRARIES ${LIBAVFORMAT_LIBRARY} )
+-#set(LIBAVFORMAT_INCLUDE_DIRS ${LIBAVFORMAT_INCLUDE_DIR} )
+-
+-#include(FindPackageHandleStandardArgs)
+-# handle the QUIETLY and REQUIRED arguments and set LIBAVFORMAT_FOUND to TRUE
+-# if all listed variables are TRUE
+-#find_package_handle_standard_args(LibAvformat  DEFAULT_MSG
+-#                                  LIBAVFORMAT_LIBRARY LIBAVFORMAT_INCLUDE_DIR)
+-
+-#mark_as_advanced(LIBAVFORMAT_INCLUDE_DIR LIBAVFORMAT_LIBRARY )
+-
+-
+-INCLUDE(FindPkgConfig)
+-PKG_SEARCH_MODULE(LIBAVFORMAT REQUIRED libavformat)
+-INCLUDE_DIRECTORIES(${LIBAVFORMAT_INCLUDE_DIRS})
++MACRO (FINDAVFORMAT _lib)
++
++FIND_PATH(AVFORMAT_INCLUDE_DIR_FF "ffmpeg/avformat.h" PATHS)
++IF (AVFORMAT_INCLUDE_DIR_FF)
++      SET (AVFORMAT_INCLUDE_DIR "${AVCODEC_INCLUDE_DIR_FF}/ffmpeg")
++ELSE (AVFORMAT_INCLUDE_DIR_FF)
++      FIND_PATH(AVFORMAT_INCLUDE_DIR_LAVC "libavformat/avformat.h" PATHS)
++      IF (AVFORMAT_INCLUDE_DIR_LAVC)
++          SET (AVFORMAT_INCLUDE_DIR "${AVFORMAT_INCLUDE_DIR_LAVC}/libavformat")
++      ELSE (AVFORMAT_INCLUDE_DIR_LAVC)
++	  FIND_PATH(AVFORMAT_INCLUDE_DIR_FF_LAVF "ffmpeg/libavformat/avformat.h" PATHS)
++	  IF (AVFORMAT_INCLUDE_DIR_FF_LAVF)
++	    SET (AVFORMAT_INCLUDE_DIR "${AVFORMAT_INCLUDE_DIR_FF_LAVF}/ffmpeg/libavformat")
++	  ENDIF (AVFORMAT_INCLUDE_DIR_FF_LAVF)
++      ENDIF (AVFORMAT_INCLUDE_DIR_LAVC)
++ENDIF (AVFORMAT_INCLUDE_DIR_FF)
++
++
++
++FIND_LIBRARY(AVFORMAT_LIBRARY NAMES ${_lib} PATHS)
++
++IF (AVFORMAT_INCLUDE_DIR AND AVFORMAT_LIBRARY)
++   SET(INC_FOUND TRUE)
++ELSE (AVFORMAT_INCLUDE_DIR AND AVFORMAT_LIBRARY)
++      SET(INC_FOUND FALSE)
++ENDIF (AVFORMAT_INCLUDE_DIR AND AVFORMAT_LIBRARY)
++
++
++IF (INC_FOUND)
++      MESSAGE(STATUS "Found include avformat.h: ${AVFORMAT_INCLUDE_DIR}")
++      MESSAGE(STATUS "Found library ${_lib}: ${AVFORMAT_LIBRARY}")
++ELSE (INC_FOUND)
++      MESSAGE(FATAL_ERROR "Could not find ${_lib}")
++ENDIF (INC_FOUND)
++ENDMACRO (FINDAVFORMAT _lib)
+diff --git a/k9copy.desktop b/k9copy.desktop
+index 547589e..984016b 100644
+--- a/k9copy.desktop
++++ b/k9copy.desktop
+@@ -1,7 +1,7 @@
+ [Desktop Entry]
+ Type=Application
+-Name=k9copy
+-Exec=k9copy -caption "%c" %i %u
++Name=K9copy
++Exec=k9copy
+ Comment=DVD9 to DVD5 backup tool
+ Comment[fr]=Backup de DVD9 en DVD5
+ Comment[tr]=DVD9 DVD5 yedekleme aracı
+diff --git a/k9copy_assistant.desktop b/k9copy_assistant.desktop
+index 6561ceb..48dd2bf 100644
+--- a/k9copy_assistant.desktop
++++ b/k9copy_assistant.desktop
+@@ -1,9 +1,7 @@
+-#!/usr/bin/env xdg-open
+ [Desktop Entry]
+-Encoding=UTF-8
+ Type=Application
+-Name=k9copy assistant
+-Exec=k9copy --assistant -caption "%c" %i %m  %u
++Name=K9copy Assistant
++Exec=k9copy --assistant
+ Comment=DVD9 to DVD5 backup tool
+ Comment[fr]=Backup de DVD9 en DVD5
+ Comment[tr]=DVD9 DVD5 yedekleme aracı
+@@ -14,9 +12,8 @@ GenericName[fr]=Backup de DVD Video
+ GenericName[tr]=DVD Vidyo Yedekleme Aracı
+ GenericName[ru]=Копирование с видео-DVD
+ GenericName[uk]=Копіювання відео-DVD
+-MimeTypes=
+ Terminal=false
+ Icon=k9copy
+ X-DocPath=k9copy/index.html
+-Categories=Qt;KDE;AudioVideo;DiscBurning;
+-X-KDE-StartupNotify=true
+\ No newline at end of file
++Categories=Qt;KDE;AudioVideo;DiscBurning;AudioVideoEditing;
++X-KDE-StartupNotify=true
+diff --git a/k9copy_assistant_open.desktop b/k9copy_assistant_open.desktop
+index 64523c6..584eab9 100644
+--- a/k9copy_assistant_open.desktop
++++ b/k9copy_assistant_open.desktop
+@@ -1,5 +1,5 @@
+ [Desktop Action open]
+-Exec=k9copy --input %f --assistant
++Exec=K9copy --input %f --assistant
+ Icon=k9copy
+ Name=Copy with k9copy (wizard)
+ Name[fr]=Copier avec k9copy (wizard)
+@@ -11,4 +11,4 @@ NAme[uk]=Копіювати за допомогою майстра k9copy
+ [Desktop Entry]
+ X-KDE-Solid-Predicate=[[ StorageVolume.ignored == false AND OpticalDisc.availableContent == 'Data|VideoDvd' ] OR [ StorageVolume.ignored == false AND OpticalDisc.availableContent == 'Data|VideoDvd' ]]
+ Type=Service
+-Actions=open;
+\ No newline at end of file
++Actions=open;
+diff --git a/k9copy_open.desktop b/k9copy_open.desktop
+index f084c38..061ff68 100644
+--- a/k9copy_open.desktop
++++ b/k9copy_open.desktop
+@@ -1,5 +1,5 @@
+ [Desktop Action open]
+-Exec=k9copy --input %f 
++Exec=K9copy --input %f 
+ Icon=k9copy
+ Name=Copy with k9copy
+ Name[fr]=Copier avec k9copy
+@@ -11,4 +11,4 @@ Name[uk]=Копіювати за допомогою k9copy
+ [Desktop Entry]
+ X-KDE-Solid-Predicate=[[ StorageVolume.ignored == false AND OpticalDisc.availableContent == 'Data|VideoDvd' ] OR [ StorageVolume.ignored == false AND OpticalDisc.availableContent == 'Data|VideoDvd' ]]
+ Type=Service
+-Actions=open;
+\ No newline at end of file
++Actions=open;
+diff --git a/src/backup/k9dvdbackup.cpp b/src/backup/k9dvdbackup.cpp
+index f5e4859..ff0e602 100755
+--- a/src/backup/k9dvdbackup.cpp
++++ b/src/backup/k9dvdbackup.cpp
+@@ -33,6 +33,7 @@
+ #include <stdarg.h>
+ #include <errno.h>
+ #include <string.h>
++#include <math.h>
+ #include <qdir.h>
+ 
+ #include <kmessagebox.h>
+@@ -907,7 +908,8 @@ k9Vobu * k9DVDBackup::remapOffset(uint32_t _sector,uint32_t *_offset,int _dir) {
+ 
+ 
+         if ((vobu1 !=NULL) && (vobu2!=NULL)) {
+-            *_offset = abs(vobu1->newSector - vobu2->newSector)  | maskOffset1 ;
++            *_offset = fabs(vobu1->newSector - vobu2->newSector);
++            *_offset |= maskOffset1;
+             *_offset |= maskOffset2;
+             return vobu2;
+         }
+diff --git a/src/backup/k9execcopy.cpp b/src/backup/k9execcopy.cpp
+index d59222c..22decb2 100644
+--- a/src/backup/k9execcopy.cpp
++++ b/src/backup/k9execcopy.cpp
+@@ -306,7 +306,7 @@ void k9ExecCopy::createMkv(k9DVDTitle *_title,const QString &_filename,QMultiMap
+ 
+ #if QT_VERSION >= 0x050000
+     m_progressDialog=new QProgressDialog(k9Dialogs::getMainWidget() );
+-    m_progressDialog->setCancelButton(false);
++    m_progressDialog->setCancelButton(NULL);
+ 
+ #else
+     m_progressDialog=new KProgressDialog(k9Dialogs::getMainWidget() );
+diff --git a/src/core/k9tools.cpp b/src/core/k9tools.cpp
+index 059991d..dc97408 100644
+--- a/src/core/k9tools.cpp
++++ b/src/core/k9tools.cpp
+@@ -48,7 +48,7 @@ static bool isMainThread();
+ const QString  k9Tools::getTempPath() {
+ QString sPath;
+ 
+-sPath=QString("%1/%2/").arg(QDir::tempPath() + '/' + "k9copy/");
++sPath=QString("%1/%2/").arg(QDir::tempPath(),"k9copy/");
+ 
+ return sPath;
+ }
+@@ -88,7 +88,7 @@ bool k9Tools::checkProgram(QString _progName,bool _msg) {
+     #if QT_VERSION >= 0x050000
+     bool res=QStandardPaths::findExecutable( _progName) !=NULL ;
+     #else // Qt4 Code
+-    bool res= KStandardDirs::findExe( _progName,NULL,false) !=NULL ;
++    bool res= KStandardDirs::findExe( _progName,NULL,0) !=NULL ;
+     #endif
+     if (_msg && !res)
+         k9Dialogs::error(i18n("Error starting program %1").arg(_progName),i18n("Running program"));
+diff --git a/src/import/k9avidecode.cpp b/src/import/k9avidecode.cpp
+index 1034f96..339da77 100644
+--- a/src/import/k9avidecode.cpp
++++ b/src/import/k9avidecode.cpp
+@@ -23,10 +23,13 @@ static int sws_flags = SWS_BICUBIC;
+ 
+ #endif
+ 
++#ifndef PIX_FMT_RGB24
++    #define PIX_FMT_RGB24 AV_PIX_FMT_RGB24
++#endif
++
+ void av_free_packet_internal(AVPacket *pkt)
+ {
+     if (pkt) {
+-        if (pkt->destruct) pkt->destruct(pkt);
+         pkt->data = NULL; pkt->size = 0;
+     }
+ }
+@@ -238,14 +241,14 @@ bool k9AviDecode::open(const QString & _fileName) {
+ 
+     int numBytes;
+ // Determine required buffer size and allocate buffer
+-    numBytes=avpicture_get_size(PIX_FMT_RGB24, m_CodecCtx->width,
++    numBytes=avpicture_get_size(AV_PIX_FMT_RGB24, m_CodecCtx->width,
+                                 m_CodecCtx->height);
+     m_buffer=(uint8_t *)av_malloc(numBytes*sizeof(uint8_t));
+ 
+ // Assign appropriate parts of buffer to image planes in pFrameRGB
+ // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
+ // of AVPicture
+-    avpicture_fill((AVPicture *)m_FrameRGB, m_buffer, PIX_FMT_RGB24,
++    avpicture_fill((AVPicture *)m_FrameRGB, m_buffer, AV_PIX_FMT_RGB24,
+                    m_CodecCtx->width, m_CodecCtx->height);
+ 
+  
+@@ -317,13 +320,13 @@ void k9AviDecode::readFrame(double _seconds) {
+                     bFound=true;
+ #ifndef HAVE_SWSCALE
+                   // Convert the image from its native format to RGB
+-                    img_convert((AVPicture *)m_FrameRGB, PIX_FMT_RGB24,
++                    img_convert((AVPicture *)m_FrameRGB, AV_PIX_FMT_RGB24,
+                                 (AVPicture*)m_Frame, m_CodecCtx->pix_fmt,
+                                 m_CodecCtx->width, m_CodecCtx->height);
+                     SaveFrame(m_FrameRGB, m_CodecCtx->width,
+                               m_CodecCtx->height);
+ #else
+-		    toRGB_convert_ctx=sws_getContext(m_CodecCtx->width, m_CodecCtx->height, m_CodecCtx->pix_fmt, m_CodecCtx->width, m_CodecCtx->height, PIX_FMT_RGB24, sws_flags,NULL,NULL,NULL);
++		    toRGB_convert_ctx=sws_getContext(m_CodecCtx->width, m_CodecCtx->height, m_CodecCtx->pix_fmt, m_CodecCtx->width, m_CodecCtx->height, AV_PIX_FMT_RGB24, sws_flags,NULL,NULL,NULL);
+         		   sws_scale(toRGB_convert_ctx, m_Frame->data, m_Frame->linesize, 0, m_CodecCtx->height, m_FrameRGB->data,m_FrameRGB->linesize);
+                     // convert frame to QImage
+                     SaveFrame(m_FrameRGB, m_CodecCtx->width,
+diff --git a/src/vamps/k9fifo.cpp b/src/vamps/k9fifo.cpp
+index 0539f50..b6d738e 100644
+--- a/src/vamps/k9fifo.cpp
++++ b/src/vamps/k9fifo.cpp
+@@ -11,6 +11,8 @@
+ //
+ #include "k9fifo.h"
+ #include <QDir>
++#include <errno.h>
++#include <KDebug>
+ 
+ uint64_t k9MemoryFifo::count() {
+ 	return m_count;
+@@ -134,12 +136,19 @@ void k9FileFifo::enqueue (uchar *_buffer, uint32_t _size) {
+      m_wait.wait(&m_mutex);
+    }
+    m_wfile->seek(m_fstart);
+-   m_wfile->write((const char*)_buffer,_size);
++   int rc=m_wfile->write((const char*)_buffer,_size) ;
++   if (rc != (int) _size) {
++	kFatal() << QString("error writing to tempfile (%1)").arg(strerror (errno));
++	abort();
++   }
+    m_fstart=m_wfile->pos();
+    if (m_fstart > MAX_FILE_SIZE) {
+         m_wfile=new QTemporaryFile(QDir::cleanPath(m_output +"/k9b"));
+         m_wfile->setAutoRemove(true);
+-	m_wfile->open();
++	if(m_wfile->open() == false) {
++		kFatal() << QString("error creating tempfile in %1 (%1)").arg(QDir::cleanPath(m_output +"/k9b"), strerror (errno));
++		abort();
++	}
+ 	m_queue.enqueue(m_wfile);
+   	m_fstart=0;
+    }
+@@ -190,12 +199,17 @@ void k9FileFifo::clear() {
+ 	if (m_rfile) {
+           m_rfile->close();
+           delete m_rfile;
++	  m_rfile=NULL;
+         }
+ 	qDeleteAll(m_queue);
+ 
++
+ 	m_fstart=m_fend=0;
+         m_rfile=new QTemporaryFile(QDir::cleanPath(m_output +"/k9b"));
+         m_rfile->setAutoRemove(true);
+-	m_rfile->open();
++	if(m_rfile->open() == false) {
++		kFatal() << QString("error creating tempfile in %1 (%1)").arg(QDir::cleanPath(m_output +"/k9b"), strerror (errno));
++		abort();
++	}
+ 	m_start=m_end=0;
+ }

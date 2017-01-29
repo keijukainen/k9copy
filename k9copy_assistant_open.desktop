@@ -1,5 +1,5 @@
 [Desktop Action open]
-Exec=k9copy --input %f --assistant
+Exec=K9copy --input %f --assistant
 Icon=k9copy
 Name=Copy with k9copy (wizard)
 Name[fr]=Copier avec k9copy (wizard)
