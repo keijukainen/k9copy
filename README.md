@@ -1,11 +1,27 @@
 # k9copy
 Mirror of k9copy-reloaded patched to enable compilation with latest qt, ffmpeg and gcc
 
+REQUIRED
+
+kdesu  
+hicolor-icon-theme  
+kio  
+libmpeg2  
+xine-lib  
+dvd+rw-tools  
+dvdauthor  
+libdvdnav  
+kdelibs4support  
+libdvdcss  
+cmake  
+extra-cmake-modules  
+kdoctools
+
 TO BUILD
 
 mkdir build  
 cd build  
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DQT5_BUILD=ON  
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DQT5_BUILD=ON -Wno-dev  
 make  
 sudo make install  
 
